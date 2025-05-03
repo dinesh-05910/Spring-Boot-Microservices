@@ -1,0 +1,90 @@
+services:
+  serviceregistry:
+    image: 'chd05910/serviceregistry:0.0.1'
+    container_name: serviceregistry
+    ports:
+      - '8761:8761'
+
+  configserver:
+    image: 'chd05910/configserver:0.0.1'
+    container_name: configserver
+    ports:
+      - '9296:9296'
+    environment:
+      - EUREKA_SERVER_ADDRESS=http://serviceregistry:8761/eureka
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://configserver:9296/actuator/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    depends_on:
+      - serviceregistry
+
+  cloudgateway:
+    image: 'chd05910/cloudgateway:0.0.1'
+    container_name: cloudgateway
+    ports:
+      - '9090:9090'
+    environment:
+      - EUREKA_SERVER_ADDRESS=http://serviceregistry:8761/eureka
+      - CONFIG_SERVER_URL=configserver
+    depends_on:
+      configserver:
+        condition: service_healthy
+
+  productservice:
+    image: 'chd05910/productservice:0.0.1'
+    container_name: productservice
+    ports:
+      - '8080:8080'
+    environment:
+      - EUREKA_SERVER_ADDRESS=http://serviceregistry:8761/eureka
+      - CONFIG_SERVER_URL=configserver
+      - DB_HOST=host.docker.internal
+      - ZIPKIN_URL=host.docker.internal
+    healthcheck:
+      test: [ "CMD", "curl", "-f", "http://productservice:8080/actuator/health" ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    depends_on:
+      configserver:
+        condition: service_healthy
+
+
+  paymentservice:
+    image: 'chd05910/paymentservice:0.0.1'
+    container_name: paymentservice
+    ports:
+      - '8081:8081'
+    environment:
+      - EUREKA_SERVER_ADDRESS=http://serviceregistry:8761/eureka
+      - CONFIG_SERVER_URL=configserver
+      - DB_HOST=host.docker.internal
+      - ZIPKIN_URL=host.docker.internal
+    healthcheck:
+      test: [ "CMD", "curl", "-f", "http://paymentservice:8081/actuator/health" ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    depends_on:
+      configserver:
+        condition: service_healthy
+
+  orderservice:
+    image: 'chd05910/orderservice:0.0.1'
+    container_name: orderservice
+    ports:
+      - '8082:8082'
+    environment:
+      - EUREKA_SERVER_ADDRESS=http://serviceregistry:8761/eureka
+      - CONFIG_SERVER_URL=configserver
+      - DB_HOST=host.docker.internal
+      - ZIPKIN_URL=host.docker.internal
+    depends_on:
+      configserver:
+        condition: service_healthy
+      productservice:
+        condition: service_healthy
+      paymentservice:
+        condition: service_healthy
