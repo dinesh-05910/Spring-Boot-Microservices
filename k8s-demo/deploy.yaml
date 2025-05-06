@@ -1,0 +1,27 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: service-registry  # Deployment name
+spec:
+  selector:
+    matchLabels:
+      app: service-registry  # Label selector for the pods
+  template:
+    metadata:
+      labels:
+        app: service-registry   # Labels for the pod
+    spec:
+      containers:
+        - name: service-registry   # Container name
+          # Image to be used for the container
+          # The image is hosted on Docker Hub
+          # and is tagged with version 0.0.1
+          image: chd05910/serviceregistry:0.0.1
+          # Image pull policy
+          # Always pull the image from the repository
+          # This is useful for development purposes
+          # In production, it is recommended to use IfNotPresent
+          # to avoid pulling the image every time
+          imagePullPolicy: Always
+          ports:
+            - containerPort: 8761

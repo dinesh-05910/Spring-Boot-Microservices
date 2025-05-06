@@ -1,0 +1,11 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: service-registry-mvc 
+
+spec:
+  selector:
+    app: service-registry #Label selector for pods
+  ports:
+    - port: 80
+      targetPort: 8761
